@@ -11,8 +11,6 @@ import sukhoi.dev.com.tweetapp.R
 import sukhoi.dev.com.tweetapp.pojo.User
 
 
-
-
 class UsersAdapter(onUserClickListener: OnUserClickListener) : RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
 
     private val userList = ArrayList<User>()
@@ -47,8 +45,6 @@ class UsersAdapter(onUserClickListener: OnUserClickListener) : RecyclerView.Adap
         userList.clear()
         notifyDataSetChanged()
     }
-
-
 
 
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

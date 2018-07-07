@@ -7,19 +7,16 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
-import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
-import sukhoi.dev.com.tweetapp.R
-import sukhoi.dev.com.tweetapp.pojo.User
-import sukhoi.dev.com.tweetapp.adapter.UsersAdapter
 import android.widget.TextView
+import sukhoi.dev.com.tweetapp.R
+import sukhoi.dev.com.tweetapp.adapter.UsersAdapter
+import sukhoi.dev.com.tweetapp.pojo.User
 
 
-
-
-class SearchUsersActivity: AppCompatActivity() {
+class SearchUsersActivity : AppCompatActivity() {
     lateinit var usersRecyclerView: RecyclerView
     lateinit var usersAdapter: UsersAdapter
     lateinit var toolbar: Toolbar
@@ -50,8 +47,10 @@ class SearchUsersActivity: AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId) {
-            android.R.id.home -> { onBackPressed(); return true }
+        when (item.itemId) {
+            android.R.id.home -> {
+                onBackPressed(); return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -60,7 +59,7 @@ class SearchUsersActivity: AppCompatActivity() {
         usersRecyclerView = findViewById(R.id.users_recycler_view)
         usersRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        val onUserClickListener = object: UsersAdapter.OnUserClickListener {
+        val onUserClickListener = object : UsersAdapter.OnUserClickListener {
             override fun onUserClick(user: User) {
                 val intent = Intent(this@SearchUsersActivity, UserInfoActivity::class.java)
                 intent.putExtra(UserInfoActivity().USER_ID, user.id)

@@ -1,15 +1,15 @@
 package sukhoi.dev.com.tweetapp.activity
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.widget.ImageView
-import android.widget.TextView
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
+import android.widget.TextView
 import com.squareup.picasso.Picasso
 import sukhoi.dev.com.tweetapp.R
 import sukhoi.dev.com.tweetapp.adapter.TweetAdapter
@@ -18,7 +18,7 @@ import sukhoi.dev.com.tweetapp.pojo.User
 
 class UserInfoActivity : AppCompatActivity() {
 
-    lateinit var userImageView : ImageView
+    lateinit var userImageView: ImageView
     lateinit var nameTextView: TextView
     lateinit var nickTextView: TextView
     lateinit var descriptionTextView: TextView
@@ -94,11 +94,11 @@ class UserInfoActivity : AppCompatActivity() {
     }
 
     fun loadTweets() {
-        val tweets= tweets()
+        val tweets = tweets()
         tweetAdapter.setItems(tweets)
     }
 
-    fun tweets() : Collection<Tweet> {
+    fun tweets(): Collection<Tweet> {
         return listOf(
                 Tweet(this.user, 1L, "Thu Dec 13 07:31:08 +0000 2017", "Очень длинное описание твита 1",
                         4L, 4L, "https://www.w3schools.com/w3css/img_fjords.jpg"),

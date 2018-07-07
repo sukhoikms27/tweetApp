@@ -13,7 +13,6 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.collections.ArrayList
-import kotlin.collections.Collection
 
 
 class TweetAdapter : RecyclerView.Adapter<TweetAdapter.TweetViewHolder>() {
