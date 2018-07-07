@@ -1,16 +1,20 @@
-package sukhoi.dev.com.tweetapp
+package sukhoi.dev.com.tweetapp.activity
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.ImageView
 import android.widget.TextView
+import android.support.v7.widget.Toolbar
+import android.view.Menu
+import android.view.MenuItem
 import com.squareup.picasso.Picasso
+import sukhoi.dev.com.tweetapp.R
 import sukhoi.dev.com.tweetapp.adapter.TweetAdapter
 import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
-import java.util.*
 
 class UserInfoActivity : AppCompatActivity() {
 
@@ -23,15 +27,17 @@ class UserInfoActivity : AppCompatActivity() {
     lateinit var followersTextView: TextView
     lateinit var tweetsRecyclerView: RecyclerView
     lateinit var tweetAdapter: TweetAdapter
+    lateinit var toolbar: Toolbar
     val user: User = User(
             id = 1L,
             imageUrl = "http://i.imgur.com/DvpvklR.png",
             name = "DevAuthor",
-            nick = "sukhoi",
+            nick = "@sukhoi",
             description = "Some description",
             location = "Saint-Petersburg",
             folloingCount = 1993,
             followersCount = 89)
+    val USER_ID = "userId"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +50,15 @@ class UserInfoActivity : AppCompatActivity() {
         locationTextView = findViewById(R.id.user_location_text_view)
         followingTextView = findViewById(R.id.following_count_text_view)
         followersTextView = findViewById(R.id.followers_count_text_view)
+        toolbar = findViewById(R.id.toolbar)
+
+        setSupportActionBar(toolbar)
 
         initRecyclerView()
-
         displayUserInfo(user)
         loadTweets()
+
+        supportActionBar?.title = user.name
     }
 
     fun displayUserInfo(user: User) {
@@ -60,6 +70,21 @@ class UserInfoActivity : AppCompatActivity() {
         followingTextView.text = user.folloingCount.toString()
         followersTextView.text = user.followersCount.toString()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.user_info_menu, menu)
+//        return super.onCreateOptionsMenu(menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if (item?.itemId == R.id.action_search) {
+            startActivity(Intent(this, SearchUsersActivity::class.java))
+        }
+//        return super.onOptionsItemSelected(item)
+        return true
+    }
+
 
     fun initRecyclerView() {
         tweetsRecyclerView = findViewById(R.id.tweets_recycler_view)
@@ -74,7 +99,7 @@ class UserInfoActivity : AppCompatActivity() {
     }
 
     fun tweets() : Collection<Tweet> {
-        return Arrays.asList(
+        return listOf(
                 Tweet(this.user, 1L, "Thu Dec 13 07:31:08 +0000 2017", "Очень длинное описание твита 1",
                         4L, 4L, "https://www.w3schools.com/w3css/img_fjords.jpg"),
 

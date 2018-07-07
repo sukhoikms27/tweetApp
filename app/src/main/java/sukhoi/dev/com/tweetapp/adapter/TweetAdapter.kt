@@ -23,8 +23,8 @@ class TweetAdapter : RecyclerView.Adapter<TweetAdapter.TweetViewHolder>() {
     private val MONTH_DAY_FORMAT = "MMM d"
 
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): TweetViewHolder {
-        val view = LayoutInflater.from(parent?.context).inflate(R.layout.tweet_item_view, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TweetViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.tweet_item_view, parent, false)
         return TweetViewHolder(view)
     }
 
@@ -32,8 +32,8 @@ class TweetAdapter : RecyclerView.Adapter<TweetAdapter.TweetViewHolder>() {
         return tweetList.size
     }
 
-    override fun onBindViewHolder(holder: TweetViewHolder?, position: Int) {
-        holder?.bind(tweetList[position])
+    override fun onBindViewHolder(holder: TweetViewHolder, position: Int) {
+        holder.bind(tweetList[position])
     }
 
 
