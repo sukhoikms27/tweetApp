@@ -14,7 +14,7 @@ class JsonParser {
         return User(
                 id = userJson.getLong("id"),
                 name = userJson.getString("name"),
-                nick = userJson.getString("screen_name"),
+                nick = "@${userJson.getString("screen_name")}",
                 location = userJson.getString("location"),
                 description = userJson.getString("description"),
                 imageUrl = userJson.getString("profile_image_url"),
