@@ -7,6 +7,6 @@ data class User(
         var nick: String,
         var description: String,
         var location: String,
-        var folloingCount: Int,
+        var followingCount: Int,
         var followersCount: Int
 )

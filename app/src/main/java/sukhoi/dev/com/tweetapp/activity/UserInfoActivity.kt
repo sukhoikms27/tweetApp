@@ -1,11 +1,13 @@
 package sukhoi.dev.com.tweetapp.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
@@ -13,8 +15,13 @@ import android.widget.TextView
 import com.squareup.picasso.Picasso
 import sukhoi.dev.com.tweetapp.R
 import sukhoi.dev.com.tweetapp.adapter.TweetAdapter
+import sukhoi.dev.com.tweetapp.network.HttpClient
 import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
+import java.io.IOException
+import android.os.AsyncTask
+
+
 
 class UserInfoActivity : AppCompatActivity() {
 
@@ -28,6 +35,7 @@ class UserInfoActivity : AppCompatActivity() {
     lateinit var tweetsRecyclerView: RecyclerView
     lateinit var tweetAdapter: TweetAdapter
     lateinit var toolbar: Toolbar
+    lateinit var httpClient: HttpClient
     val user: User = User(
             id = 1L,
             imageUrl = "http://i.imgur.com/DvpvklR.png",
@@ -35,13 +43,15 @@ class UserInfoActivity : AppCompatActivity() {
             nick = "@sukhoi",
             description = "Some description",
             location = "Saint-Petersburg",
-            folloingCount = 1993,
+            followingCount = 1993,
             followersCount = 89)
     val USER_ID = "userId"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_info)
+
+        val userId = intent.getLongExtra(USER_ID, -1)
 
         userImageView = findViewById(R.id.user_image_view)
         nameTextView = findViewById(R.id.user_name_text_view)
@@ -59,6 +69,46 @@ class UserInfoActivity : AppCompatActivity() {
         loadTweets()
 
         supportActionBar?.title = user.name
+
+        httpClient = HttpClient()
+        loadUserInfo(userId)
+
+    }
+
+    private fun loadUserInfo(userId: Long) {
+
+        UserInfoAsyncTask().execute(userId)
+
+//        val readUserRunnable = Runnable {
+//            try {
+//                val userInfo = httpClient.readUserInfo(userId)
+//
+//                val showResultRunnable = Runnable {
+//                    Toast.makeText(this@UserInfoActivity, userInfo,
+//                            Toast.LENGTH_SHORT).show()
+//                }
+//
+//                // выполняем в UI потоке
+//                runOnUiThread(showResultRunnable)
+//
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+
+
+        // создаём объект Runnable
+//        val readUserRunnable = Runnable {
+//            try {
+//                val userInfo = httpClient.readUserInfo(userId)
+//                Log.d("HttpTest", userInfo)
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+
+        // Запускаем runnable в новом потоке
+//        Thread(readUserRunnable).start()
     }
 
     fun displayUserInfo(user: User) {
@@ -67,7 +117,7 @@ class UserInfoActivity : AppCompatActivity() {
         nickTextView.text = user.nick
         descriptionTextView.text = user.description
         locationTextView.text = user.location
-        followingTextView.text = user.folloingCount.toString()
+        followingTextView.text = user.followingCount.toString()
         followersTextView.text = user.followersCount.toString()
     }
 
@@ -109,5 +159,26 @@ class UserInfoActivity : AppCompatActivity() {
                 Tweet(user, 3L, "Thu Dec 11 07:31:08 +0000 2017", "Очень длинное описание твита 3",
                         6L, 6L, "https://www.w3schools.com/css/img_mountains.jpg")
         )
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private inner class UserInfoAsyncTask : AsyncTask<Long, Int, User>() {
+
+        override fun onPostExecute(user: User?) {
+            super.onPostExecute(user)
+            displayUserInfo(user!!)
+        }
+
+        override fun doInBackground(vararg p0: Long?): User? {
+            try {
+                // достаём userId, который передали в метод execute
+                val userId = p0[0]!!
+                return httpClient.readUserInfo(userId)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                return null
+            }
+        }
+
     }
 }
