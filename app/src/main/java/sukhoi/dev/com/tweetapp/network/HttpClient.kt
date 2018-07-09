@@ -1,42 +1,51 @@
 package sukhoi.dev.com.tweetapp.network
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import android.util.Log
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.internal.oauth.OAuth1aHeaders;
+import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
+import java.io.*
 
 
-class HttpClient() {
+class HttpClient {
     lateinit var ins : InputStream
     lateinit var user: User
-    lateinit var jsonParser: JsonParser
+    val jsonParser: JsonParser
     val HEADER_AUTHORIZATION = "Authorization"
     val GET = "GET"
+    val EXTENDED_MODE = "&tweet_mode=extended"
     init {
         jsonParser = JsonParser()
     }
 
-    fun readUserInfo(userId: Long): User {
-        val requestUrl = "https://api.twitter.com/1.1/users/show.json?user_id=$userId"
+    fun response(requestUrl: String): String {
         val url = URL(requestUrl)
         val connection = url.openConnection() as HttpURLConnection
-
         val authHeader = authHeader(requestUrl)
+
         connection.setRequestProperty(HEADER_AUTHORIZATION, authHeader)
-
         connection.connect()
-
         val status = connection.responseCode
         if (status != HttpURLConnection.HTTP_OK) {
             ins = connection.errorStream
         } else { ins = connection.inputStream }
 
-        val response = convertStreamToString(ins)
+        return convertStreamToString(ins)
+    }
+
+    fun readTweets(userId: Long): Collection<Tweet>? {
+        val requestUrl = "https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=$userId$EXTENDED_MODE"
+        val response = response(requestUrl)
+        return jsonParser.getTweets(response)
+    }
+
+    fun readUserInfo(userId: Long): User {
+        val requestUrl = "https://api.twitter.com/1.1/users/show.json?user_id=$userId"
+        val response =  response(requestUrl)
         user = jsonParser.getUser(response)
         return user
     }
@@ -53,13 +62,13 @@ class HttpClient() {
         val reader = BufferedReader(InputStreamReader(stream))
         val sb = StringBuilder()
 
-        var line: String? = reader.readLine()
-        while (line != null) {
-            sb.append(line).append("\n")
-            break
-        }
-        stream.close()
+        var line = reader.readLine()
 
+        when(line != null) {
+            true -> { sb.append(line).append("\n"); }
+            else -> stream.close()
+        }
         return sb.toString()
     }
+
 }

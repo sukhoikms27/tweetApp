@@ -9,7 +9,6 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton
 import sukhoi.dev.com.tweetapp.R
 import com.twitter.sdk.android.core.TwitterException
 import com.twitter.sdk.android.core.TwitterSession
-import android.widget.Toast
 
 
 
