@@ -6,6 +6,7 @@ import java.net.URL;
 
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.internal.oauth.OAuth1aHeaders;
+import org.json.JSONException
 import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
 import java.io.*
@@ -48,6 +49,14 @@ class HttpClient {
         val response =  response(requestUrl)
         user = jsonParser.getUser(response)
         return user
+
+    }
+
+    fun readUsers(query: String): Collection<User> {
+        val requestUrl = "https://api.twitter.com/1.1/users/search.json?q=$query"
+        val encodedUrl = requestUrl.replace(" ", "%20")
+        val response = response(encodedUrl)
+        return jsonParser.getUsers(response)
     }
 
     fun authHeader(url: String): String {

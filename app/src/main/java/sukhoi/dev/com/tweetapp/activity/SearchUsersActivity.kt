@@ -1,8 +1,12 @@
 package sukhoi.dev.com.tweetapp.activity
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.AsyncTask
 import android.os.Bundle
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -11,9 +15,13 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import org.json.JSONException
 import sukhoi.dev.com.tweetapp.R
 import sukhoi.dev.com.tweetapp.adapter.UsersAdapter
+import sukhoi.dev.com.tweetapp.network.HttpClient
 import sukhoi.dev.com.tweetapp.pojo.User
+import java.io.IOException
 
 
 class SearchUsersActivity : AppCompatActivity() {
@@ -22,6 +30,8 @@ class SearchUsersActivity : AppCompatActivity() {
     lateinit var toolbar: Toolbar
     lateinit var queryEditText: EditText
     lateinit var searchButton: Button
+    lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    lateinit var httpClient: HttpClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +41,8 @@ class SearchUsersActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         queryEditText = toolbar.findViewById(R.id.query_edit_text)
         searchButton = toolbar.findViewById(R.id.search_button)
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.setOnRefreshListener { searchUsers() }
 
         searchButton.setOnClickListener { searchUsers() }
 
@@ -44,6 +56,7 @@ class SearchUsersActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        httpClient = HttpClient()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -57,6 +70,7 @@ class SearchUsersActivity : AppCompatActivity() {
 
     private fun initRecyclerView() {
         usersRecyclerView = findViewById(R.id.users_recycler_view)
+        usersRecyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         usersRecyclerView.layoutManager = LinearLayoutManager(this)
 
         val onUserClickListener = object : UsersAdapter.OnUserClickListener {
@@ -70,36 +84,41 @@ class SearchUsersActivity : AppCompatActivity() {
         usersRecyclerView.adapter = usersAdapter
     }
 
-    fun loadUsers() {
-        val users = getUsers()
-        usersAdapter.setItems(users)
-    }
-
-    fun getUsers(): Collection<User> {
-        return listOf(
-                User(929257819349700608L,
-                        "http://i.imgur.com/DvpvklR.png",
-                        "DevAuthor",
-                        "@sukhoi",
-                        "Some description",
-                        "Saint-Petersburg",
-                        1993,
-                        89
-                ),
-                User(44196397L,
-                        "https://pbs.twimg.com/profile_images/782474226020200448/zDo-gAo0_400x400.jpg",
-                        "Elon Musk",
-                        "@elonmusk",
-                        "Hat Salesman",
-                        "Boring",
-                        14,
-                        13)
-        )
-    }
-
     fun searchUsers() {
-        val users = getUsers()
-        usersAdapter.clearItems()
-        usersAdapter.setItems(users)
+        val query = queryEditText.text.toString()
+        if(query.isEmpty()) {
+            Toast.makeText(this@SearchUsersActivity, R.string.not_enough_symbols_msg, Toast.LENGTH_SHORT).show()
+            swipeRefreshLayout.isRefreshing = false
+            return
+        }
+        SearchUsersAsyncTask().execute(query)
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private inner class SearchUsersAsyncTask : AsyncTask<String, Int, Collection<User>?>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            swipeRefreshLayout.isRefreshing = true
+        }
+
+        override fun doInBackground(vararg params: String): Collection<User>? {
+            val query = params[0]
+            try {
+                return httpClient.readUsers(query)
+            } catch (e: IOException) {
+                return null
+            } catch (e: JSONException) {
+                return null
+            }
+
+        }
+
+        override fun onPostExecute(users: Collection<User>?) {
+            swipeRefreshLayout.isRefreshing = false
+            users?.let {
+                usersAdapter.clearItems()
+                usersAdapter.setItems(it)
+            } ?: Toast.makeText(this@SearchUsersActivity, R.string.loading_error_msg, Toast.LENGTH_SHORT).show()
+        }
     }
 }

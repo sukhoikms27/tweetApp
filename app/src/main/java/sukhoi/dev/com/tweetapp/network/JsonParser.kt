@@ -27,6 +27,19 @@ class JsonParser {
         )
     }
 
+    fun getUsers(response: String): Collection<User> {
+        val jsonArray = JSONArray(response)
+        val usersSearchResult = ArrayList<User>()
+
+        for (i in 0 until jsonArray.length()) {
+            val userJson = jsonArray.getJSONObject(i)
+            val user = getUser(userJson)
+            usersSearchResult.add(user)
+        }
+
+        return usersSearchResult
+    }
+
     fun getTweets(response: String): Collection<Tweet> {
         val jsonArray = JSONArray(response)
         val tweetsResult = ArrayList<Tweet>()

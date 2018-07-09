@@ -19,6 +19,10 @@ import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
 import java.io.IOException
 import android.os.AsyncTask
+import android.support.v4.view.ViewCompat
+import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.widget.DividerItemDecoration
+import android.widget.Toast
 import org.json.JSONException
 
 class UserInfoActivity : AppCompatActivity() {
@@ -33,7 +37,9 @@ class UserInfoActivity : AppCompatActivity() {
     lateinit var tweetsRecyclerView: RecyclerView
     lateinit var tweetAdapter: TweetAdapter
     lateinit var toolbar: Toolbar
+    lateinit var swipeRefreshLayout: SwipeRefreshLayout
     lateinit var httpClient: HttpClient
+    var taskInProgressCount = 0
     val USER_ID = "userId"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,10 +57,16 @@ class UserInfoActivity : AppCompatActivity() {
         followersTextView = findViewById(R.id.followers_count_text_view)
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+        httpClient = HttpClient()
 
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.setOnRefreshListener {
+            tweetAdapter.clearItems()
+            loadUserInfo(userId)
+            loadTweets(userId)
+        }
         initRecyclerView()
 
-        httpClient = HttpClient()
         loadUserInfo(userId)
         loadTweets(userId)
     }
@@ -94,14 +106,31 @@ class UserInfoActivity : AppCompatActivity() {
 
     fun initRecyclerView() {
         tweetsRecyclerView = findViewById(R.id.tweets_recycler_view)
+
+        ViewCompat.setNestedScrollingEnabled(tweetsRecyclerView, false)
+        tweetsRecyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+
         tweetsRecyclerView.layoutManager = LinearLayoutManager(this)
         tweetAdapter = TweetAdapter()
         tweetsRecyclerView.adapter = tweetAdapter
     }
 
+    private fun refreshLayoutVisible(visible: Boolean) {
+        if (visible) {
+            taskInProgressCount++
+            if (taskInProgressCount == 1) swipeRefreshLayout.isRefreshing = true
+        } else {
+            taskInProgressCount--
+            if (taskInProgressCount == 0) swipeRefreshLayout.isRefreshing = false
+        }
+    }
 
     @SuppressLint("StaticFieldLeak")
     private inner class UserInfoAsyncTask : AsyncTask<Long, Int, User>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            refreshLayoutVisible(true)
+        }
 
         override fun doInBackground(vararg p0: Long?): User? {
             try {
@@ -118,13 +147,18 @@ class UserInfoActivity : AppCompatActivity() {
 
         }
 
-        override fun onPostExecute(user: User) {
-            displayUserInfo(user)
+        override fun onPostExecute(user: User?) {
+            refreshLayoutVisible(false)
+            user?.let { displayUserInfo(it) } ?: Toast.makeText(this@UserInfoActivity, R.string.loading_error_msg, Toast.LENGTH_SHORT).show()
         }
     }
 
     @SuppressLint("StaticFieldLeak")
     private inner class TweetsAsyncTask : AsyncTask<Long, Int, Collection<Tweet>?>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+            refreshLayoutVisible(true)
+        }
 
         override fun doInBackground(vararg p0: Long?): Collection<Tweet>? {
             try {
@@ -142,7 +176,8 @@ class UserInfoActivity : AppCompatActivity() {
         }
 
         override fun onPostExecute(tweets: Collection<Tweet>?) {
-             tweetAdapter.setItems(tweets!!)
+            refreshLayoutVisible(false)
+            tweets?.let { tweetAdapter.setItems(it) } ?: Toast.makeText(this@UserInfoActivity, R.string.loading_error_msg, Toast.LENGTH_SHORT).show()
         }
     }
 }
