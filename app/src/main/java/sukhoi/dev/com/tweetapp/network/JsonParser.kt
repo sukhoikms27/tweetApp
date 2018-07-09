@@ -1,70 +1,49 @@
 package sukhoi.dev.com.tweetapp.network
-
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.Gson
 import sukhoi.dev.com.tweetapp.pojo.Tweet
 import sukhoi.dev.com.tweetapp.pojo.User
-
-
+import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonParseException
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonElement
+import com.google.gson.JsonDeserializer
+import java.lang.reflect.Type
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 
 class JsonParser {
+    val GSON = GsonBuilder()
+            .registerTypeAdapter(Tweet::class.java, TweetDeserializer())
+            .create()
 
     fun getUser(response: String): User {
-        val userJson = JSONObject(response)
-        return getUser(userJson)
-    }
-
-    private fun getUser(userJson: JSONObject): User {
-        return User(
-                id = userJson.getLong("id"),
-                name = userJson.getString("name"),
-                nick = userJson.getString("screen_name"),
-                location = userJson.getString("location"),
-                description = userJson.getString("description"),
-                imageUrl = userJson.getString("profile_image_url"),
-                followersCount = userJson.getInt("followers_count"),
-                followingCount = userJson.getInt("favourites_count")
-        )
+        return Gson().fromJson(response, User::class.java)
     }
 
     fun getUsers(response: String): Collection<User> {
-        val jsonArray = JSONArray(response)
-        val usersSearchResult = ArrayList<User>()
-
-        for (i in 0 until jsonArray.length()) {
-            val userJson = jsonArray.getJSONObject(i)
-            val user = getUser(userJson)
-            usersSearchResult.add(user)
-        }
-
-        return usersSearchResult
+        val usersType = object : TypeToken<Collection<User>>() {}.type
+        return Gson().fromJson(response, usersType)
     }
 
     fun getTweets(response: String): Collection<Tweet> {
-        val jsonArray = JSONArray(response)
-        val tweetsResult = ArrayList<Tweet>()
+        val tweetsType = object : TypeToken<Collection<Tweet>>() {}.type
+        return GSON.fromJson(response, tweetsType)
+    }
+}
 
-        for (i in 0 until jsonArray.length()) {
-            val tweetJson = jsonArray.getJSONObject(i)
-            val userJson = tweetJson.getJSONObject("user")
-            tweetsResult.add(
-                    Tweet(
-                            user = getUser(userJson),
-                            id = tweetJson.getLong("id"),
-                            creationDate = tweetJson.getString("created_at"),
-                            text = tweetJson.getString("full_text"),
-                            retweetCount = tweetJson.getLong("retweet_count"),
-                            favouriteCount = tweetJson.getLong("favorite_count"),
-                            imageUrl = getTweetImageUrl(tweetJson)
-                    ))
-        }
-        return tweetsResult
+class TweetDeserializer : JsonDeserializer<Tweet> {
+    private val GSON = Gson()
+
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Tweet {
+        val tweetJson = json.asJsonObject
+        return GSON.fromJson(tweetJson, Tweet::class.java)
+                .apply { this.imageUrl = getTweetImageUrl(tweetJson) }
     }
 
-    private fun getTweetImageUrl(tweetJson: JSONObject): String? {
-        val entities = tweetJson.getJSONObject("entities")
-        val mediaArray = if (entities.has("media")) entities.getJSONArray("media") else null
-        val firstMedia = mediaArray?.getJSONObject(0)
-        return firstMedia?.getString("media_url")
+    private fun getTweetImageUrl(tweetJson: JsonObject): String? {
+        val entities = tweetJson.get("entities").asJsonObject
+        val mediaArray = if (entities.has("media")) entities.get("media").asJsonArray else null
+        val firstMedia = mediaArray?.get(0)?.asJsonObject
+        return firstMedia?.get("media_url")?.asString
     }
 }

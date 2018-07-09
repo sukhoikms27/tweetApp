@@ -80,6 +80,7 @@ class SearchUsersActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         }
+
         usersAdapter = UsersAdapter(onUserClickListener)
         usersRecyclerView.adapter = usersAdapter
     }
