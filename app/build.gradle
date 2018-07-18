@@ -42,4 +42,5 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:27.1.1'
     implementation 'com.twitter.sdk.android:twitter-core:3.1.1'
     implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'io.github.tonnyl:whatsnew:0.1.1'
 }
